@@ -117,7 +117,7 @@ func BenchmarkTree_Search(b *testing.B) {
 
 func BenchmarkBinary_Delete(b *testing.B) {
 	btree := &tree.Binary{}
-	start, end := int64(1), int64(10000)
+	start, end := int64(1), int64(100000)
 
 	for i := start; i <= end; i++ {
 		v := testutils.RandInt64(start, end)
@@ -131,14 +131,8 @@ func BenchmarkBinary_Delete(b *testing.B) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		// b.StopTimer()
-		n := &node{
-			ID:   testutils.RandInt64(0, 999999),
-			Data: testutils.RandomString(30),
-		}
-		btree.Insert(n)
-		// b.StartTimer()
-
-		btree.Delete(n)
+		btree.Delete(&node{
+			ID: testutils.RandInt64(0, 99999),
+		})
 	}
 }
