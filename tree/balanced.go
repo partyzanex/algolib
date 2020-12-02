@@ -1,16 +1,202 @@
 package tree
 
-import (
-	"fmt"
-	"strings"
-)
+type BNode struct {
+	Value       Comparable
+	Left, Right *BNode
+	height      int
+}
 
-func min(a, b int) int {
-	if a < b {
-		return a
+func (n *BNode) Height() int {
+	if n == nil {
+		return 0
 	}
 
-	return b
+	return n.height
+}
+
+func (n *BNode) search(v Comparable) *BNode {
+	if n == nil {
+		return nil
+	}
+
+	x := n.Value.Value()
+	y := v.Value()
+
+	if y == x {
+		return n
+	}
+
+	if y < x {
+		if n.Left == nil {
+			return nil
+		}
+
+		return n.Left.search(v)
+	}
+
+	if n.Right == nil {
+		return nil
+	}
+
+	return n.Right.search(v)
+}
+
+func (n *BNode) walk(f BWalkFunc) {
+	if n.Left != nil {
+		n.Left.walk(f)
+		return
+	}
+
+	if !f(n) {
+		return
+	}
+
+	if n.Right != nil {
+		n.Right.walk(f)
+		return
+	}
+}
+
+func rightRotate(y *BNode) *BNode {
+	x := y.Left
+	t := x.Right
+	x.Right = y
+	y.Left = t
+
+	y.height = max(y.Left.Height(), y.Right.Height()) + 1
+	x.height = max(x.Left.Height(), x.Right.Height()) + 1
+
+	return x
+}
+
+func leftRotate(x *BNode) *BNode {
+	y := x.Right
+	t := y.Left
+	y.Left = x
+	x.Right = t
+
+	x.height = max(x.Left.Height(), x.Right.Height()) + 1
+	y.height = max(y.Left.Height(), y.Right.Height()) + 1
+
+	return y
+}
+
+func getBalance(n *BNode) int {
+	if n == nil {
+		return 0
+	}
+
+	return n.Left.Height() - n.Right.Height()
+}
+
+func insert(n *BNode, v Comparable) *BNode {
+	if n == nil {
+		return &BNode{Value: v}
+	}
+
+	x := n.Value.Value()
+	y := v.Value()
+
+	switch {
+	case y < x:
+		n.Left = insert(n.Left, v)
+		break
+	case y > x:
+		n.Right = insert(n.Right, v)
+		break
+	default:
+		return n
+	}
+
+	n.height = max(n.Left.Height(), n.Right.Height()) + 1
+	balance := getBalance(n)
+
+	if balance > 1 {
+		x = n.Left.Value.Value()
+		if y < x {
+			return rightRotate(n)
+		} else if y > x {
+			n.Left = leftRotate(n.Left)
+			return rightRotate(n)
+		}
+	}
+
+	if balance < -1 {
+		x = n.Right.Value.Value()
+		if y > x {
+			return leftRotate(n)
+		} else if y < x {
+			n.Right = rightRotate(n.Right)
+			return leftRotate(n)
+		}
+	}
+
+	return n
+}
+
+func remove(n *BNode, v Comparable) *BNode {
+	if n == nil {
+		return n
+	}
+
+	x := n.Value.Value()
+	y := v.Value()
+
+	switch {
+	case y < x:
+		n.Left = remove(n.Left, v)
+		break
+	case y > x:
+		n.Right = remove(n.Right, v)
+	default:
+		if n.Left == nil || n.Right == nil {
+			var t *BNode
+
+			if t == n.Left {
+				t = n.Right
+			} else {
+				t = n.Left
+			}
+
+			if t == nil {
+				t = n
+				n = nil
+			} else {
+				n = t
+			}
+		} else {
+			t := nodeWithMinValue(n.Right)
+			n.Value = t.Value
+			n.Right = remove(n.Right, t.Value)
+		}
+	}
+
+	if n == nil {
+		return n
+	}
+
+	n.height = max(n.Left.Height(), n.Right.Height()) + 1
+	balance := getBalance(n)
+
+	if balance > 1 {
+		if getBalance(n.Left) >= 0 {
+			return rightRotate(n)
+		} else {
+			n.Left = leftRotate(n.Left)
+			return rightRotate(n)
+		}
+	}
+
+	if balance < -1 {
+		if getBalance(n.Right) <= 0 {
+			return leftRotate(n)
+		} else {
+			n.Right = rightRotate(n.Right)
+			return leftRotate(n)
+		}
+	}
+
+	return n
 }
 
 func max(a, b int) int {
@@ -21,219 +207,73 @@ func max(a, b int) int {
 	return b
 }
 
-type BNode struct {
-	Value       Comparable
-	Left, Right *BNode
+func nodeWithMinValue(n *BNode) *BNode {
+	c := n
 
-	height, bal int
-}
-
-func (n *BNode) Height() int {
-	if n == nil {
-		return 0
+	for c.Left != nil {
+		c = c.Left
 	}
 
-	return max(n.Right.Height(), n.Left.Height())
-}
-
-func (n *BNode) Balance() int {
-	return n.Right.Height() - n.Left.Height()
-}
-
-func (n *BNode) Insert(v Comparable) int {
-	i := v.Value()
-	j := n.Value.Value()
-
-	switch {
-	case i == j:
-		n.Value = v
-		return 0
-	case i < j:
-		if n.Left == nil {
-			n.Left = &BNode{
-				Value:  v,
-				height: 1,
-			}
-
-			break
-		}
-
-		if balance := n.Left.Insert(v); balance < -1 || balance > 1 {
-			n.balance(n.Left)
-		}
-	case i > j:
-		if n.Right == nil {
-			n.Right = &BNode{
-				Value:  v,
-				height: 1,
-			}
-
-			break
-		}
-
-		if balance := n.Right.Insert(v); balance < -1 || balance > 1 {
-			n.balance(n.Right)
-		}
-	}
-
-	return n.Balance()
-}
-
-func (n *BNode) rotateLeft(c *BNode) {
-	r := c.Right
-	c.Right = r.Left
-	c.bal -= 1
-	r.Left = c
-
-	if c == n.Left {
-		n.Left = c
-		return
-	}
-
-	n.Right = r
-}
-
-func (n *BNode) rotateRight(c *BNode) {
-	l := c.Left
-	c.Left = l.Right
-	l.Right = c
-	c.bal = 0
-	n.bal = 0
-
-	if c == n.Left {
-		n.Left = l
-		return
-	}
-
-	n.Right = l
-}
-
-func (n *BNode) rotateRightLeft(c *BNode) {
-	c.Right.Left.bal = 1
-	c.rotateRight(c.Right)
-	c.Right.bal = 1
-	n.rotateLeft(c)
-}
-
-func (n *BNode) rotateLeftRight(c *BNode) {
-	c.Left.Right.bal = -1
-	c.rotateLeft(c.Left)
-	c.Left.bal = -1
-	n.rotateRight(c)
-}
-
-func (n *BNode) balance(c *BNode) {
-	switch {
-	case c.bal == -2 && c.Left.bal == -1:
-		n.rotateRight(c)
-	case c.bal == 2 && c.Right.bal == 1:
-		n.rotateLeft(c)
-	case c.bal == -2 && c.Left.bal == 1:
-		n.rotateLeftRight(c)
-	case c.bal == 2 && c.Right.bal == -1:
-		n.rotateRightLeft(c)
-	}
-}
-
-func (n *BNode) Search(v Comparable) *BNode {
-	if n == nil {
-		return nil
-	}
-
-	i := v.Value()
-	j := n.Value.Value()
-
-	switch {
-	case i == j:
-		return n
-	case i < j:
-		return n.Left.Search(v)
-	default:
-		return n.Right.Search(v)
-	}
-}
-
-func (n *BNode) Walk(f WalkBFunc) {
-	if n.Left != nil && !f(n.Left) {
-		return
-	}
-
-	if !f(n) {
-		return
-	}
-
-	if n.Right != nil && !f(n.Right) {
-		return
-	}
-}
-
-func (n *BNode) Dump(i int, lr string) {
-	if n == nil {
-		return
-	}
-
-	ident := ""
-
-	if i > 0 {
-		ident = strings.Repeat(" ", (i-1)*2) + "+" + lr + "--"
-	}
-
-	fmt.Printf("%s%d[%d]\n", ident, n.Value.Value(), n.bal)
-	n.Left.Dump(i+1, "L")
-	n.Right.Dump(i+1, "R")
+	return c
 }
 
 type Balanced struct {
-	Root *BNode
+	Root   *BNode
+	height Height
 }
 
 func (t *Balanced) Insert(v Comparable) {
-	if t.Root == nil {
-		t.Root = &BNode{
-			Value: v,
-		}
-
-		return
-	}
-
-	if balance := t.Root.Insert(v); balance < -1 || balance > 1 {
-		t.balance()
-	}
+	t.Root = insert(t.Root, v)
 }
 
-func (t *Balanced) balance() {
-	if t == nil || t.Root == nil {
-		return
-	}
+func (t *Balanced) Delete(v Comparable) {
+	t.Root = remove(t.Root, v)
+}
 
-	fake := &BNode{Left: t.Root}
-	fake.balance(t.Root)
-
-	t.Root = fake.Left
+func (t *Balanced) CheckBalance() bool {
+	return checkBalance(t.Root, &t.height)
 }
 
 func (t *Balanced) Search(v Comparable) *BNode {
-	if t.Root == nil {
-		return nil
-	}
-
-	return t.Root.Search(v)
+	return t.Root.search(v)
 }
 
-type WalkBFunc func(n *BNode) bool
+type BWalkFunc func(n *BNode) bool
 
-func (t *Balanced) Walk(f WalkBFunc) {
-	if t.Root == nil {
-		return
-	}
-
-	t.Root.Walk(f)
+func (t *Balanced) Walk(f BWalkFunc) {
+	t.Root.walk(f)
 }
 
-func (t *Balanced) Dump() {
-	if t.Root == nil {
-		return
+type Height struct {
+	height int
+}
+
+func (h Height) Value() int {
+	return h.height
+}
+
+func checkBalance(t *BNode, h *Height) bool {
+	if t == nil {
+		h.height = 0
+		return true
 	}
 
-	t.Root.Dump(0, "")
+	leftHeight, rightHeight := &Height{}, &Height{}
+	l := checkBalance(t.Left, leftHeight)
+	r := checkBalance(t.Right, rightHeight)
+	lh, rh := leftHeight.height, rightHeight.height
+
+	if lh > rh {
+		h.height = lh
+	} else {
+		h.height = rh
+	}
+
+	h.height++
+
+	if (lh-rh >= 2) || (rh-lh >= 2) {
+		return false
+	}
+
+	return l && r
 }
