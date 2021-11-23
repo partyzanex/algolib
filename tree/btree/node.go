@@ -1,12 +1,14 @@
-package tree
+package btree
 
-type BNode struct {
-	Value       Comparable
-	Left, Right *BNode
+import "github.com/partyzanex/algolib/tree"
+
+type Node struct {
+	Value       tree.Comparable
+	Left, Right *Node
 	height      int
 }
 
-func (n *BNode) Height() int {
+func (n *Node) Height() int {
 	if n == nil {
 		return 0
 	}
@@ -14,7 +16,7 @@ func (n *BNode) Height() int {
 	return n.height
 }
 
-func (n *BNode) search(v Comparable) *BNode {
+func (n *Node) search(v tree.Comparable) *Node {
 	if n == nil {
 		return nil
 	}
@@ -41,9 +43,10 @@ func (n *BNode) search(v Comparable) *BNode {
 	return n.Right.search(v)
 }
 
-func (n *BNode) walk(f BWalkFunc) {
+func (n *Node) walk(f WalkFunc) {
 	if n.Left != nil {
 		n.Left.walk(f)
+
 		return
 	}
 
@@ -53,11 +56,12 @@ func (n *BNode) walk(f BWalkFunc) {
 
 	if n.Right != nil {
 		n.Right.walk(f)
+
 		return
 	}
 }
 
-func rightRotate(y *BNode) *BNode {
+func rightRotate(y *Node) *Node {
 	x := y.Left
 	t := x.Right
 	x.Right = y
@@ -69,7 +73,7 @@ func rightRotate(y *BNode) *BNode {
 	return x
 }
 
-func leftRotate(x *BNode) *BNode {
+func leftRotate(x *Node) *Node {
 	y := x.Right
 	t := y.Left
 	y.Left = x
@@ -81,7 +85,7 @@ func leftRotate(x *BNode) *BNode {
 	return y
 }
 
-func getBalance(n *BNode) int {
+func getBalance(n *Node) int {
 	if n == nil {
 		return 0
 	}
@@ -89,9 +93,9 @@ func getBalance(n *BNode) int {
 	return n.Left.Height() - n.Right.Height()
 }
 
-func insert(n *BNode, v Comparable) *BNode {
+func insert(n *Node, v tree.Comparable) *Node {
 	if n == nil {
-		return &BNode{Value: v}
+		return &Node{Value: v}
 	}
 
 	x := n.Value.Value()
@@ -100,9 +104,11 @@ func insert(n *BNode, v Comparable) *BNode {
 	switch {
 	case y < x:
 		n.Left = insert(n.Left, v)
+
 		break
 	case y > x:
 		n.Right = insert(n.Right, v)
+
 		break
 	default:
 		return n
@@ -127,6 +133,7 @@ func insert(n *BNode, v Comparable) *BNode {
 			return leftRotate(n)
 		} else if y < x {
 			n.Right = rightRotate(n.Right)
+
 			return leftRotate(n)
 		}
 	}
@@ -134,7 +141,7 @@ func insert(n *BNode, v Comparable) *BNode {
 	return n
 }
 
-func remove(n *BNode, v Comparable) *BNode {
+func remove(n *Node, v tree.Comparable) *Node {
 	if n == nil {
 		return n
 	}
@@ -145,12 +152,13 @@ func remove(n *BNode, v Comparable) *BNode {
 	switch {
 	case y < x:
 		n.Left = remove(n.Left, v)
+
 		break
 	case y > x:
 		n.Right = remove(n.Right, v)
 	default:
 		if n.Left == nil || n.Right == nil {
-			var t *BNode
+			var t *Node
 
 			if t == n.Left {
 				t = n.Right
@@ -183,6 +191,7 @@ func remove(n *BNode, v Comparable) *BNode {
 			return rightRotate(n)
 		} else {
 			n.Left = leftRotate(n.Left)
+
 			return rightRotate(n)
 		}
 	}
@@ -192,6 +201,7 @@ func remove(n *BNode, v Comparable) *BNode {
 			return leftRotate(n)
 		} else {
 			n.Right = rightRotate(n.Right)
+
 			return leftRotate(n)
 		}
 	}
@@ -207,7 +217,7 @@ func max(a, b int) int {
 	return b
 }
 
-func nodeWithMinValue(n *BNode) *BNode {
+func nodeWithMinValue(n *Node) *Node {
 	c := n
 
 	for c.Left != nil {
@@ -215,65 +225,4 @@ func nodeWithMinValue(n *BNode) *BNode {
 	}
 
 	return c
-}
-
-type Balanced struct {
-	Root   *BNode
-	height Height
-}
-
-func (t *Balanced) Insert(v Comparable) {
-	t.Root = insert(t.Root, v)
-}
-
-func (t *Balanced) Delete(v Comparable) {
-	t.Root = remove(t.Root, v)
-}
-
-func (t *Balanced) CheckBalance() bool {
-	return checkBalance(t.Root, &t.height)
-}
-
-func (t *Balanced) Search(v Comparable) *BNode {
-	return t.Root.search(v)
-}
-
-type BWalkFunc func(n *BNode) bool
-
-func (t *Balanced) Walk(f BWalkFunc) {
-	t.Root.walk(f)
-}
-
-type Height struct {
-	height int
-}
-
-func (h Height) Value() int {
-	return h.height
-}
-
-func checkBalance(t *BNode, h *Height) bool {
-	if t == nil {
-		h.height = 0
-		return true
-	}
-
-	leftHeight, rightHeight := &Height{}, &Height{}
-	l := checkBalance(t.Left, leftHeight)
-	r := checkBalance(t.Right, rightHeight)
-	lh, rh := leftHeight.height, rightHeight.height
-
-	if lh > rh {
-		h.height = lh
-	} else {
-		h.height = rh
-	}
-
-	h.height++
-
-	if (lh-rh >= 2) || (rh-lh >= 2) {
-		return false
-	}
-
-	return l && r
 }

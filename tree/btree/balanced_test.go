@@ -1,14 +1,24 @@
-package tree_test
+package btree_test
 
 import (
-	"github.com/partyzanex/algolib/tree"
+	"testing"
+
+	"github.com/partyzanex/algolib/tree/btree"
 	"github.com/partyzanex/testutils"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
+type node struct {
+	ID   int64
+	Data string
+}
+
+func (n *node) Value() int64 {
+	return n.ID
+}
+
 func TestBalanced_Insert(t *testing.T) {
-	btree := &tree.Balanced{}
+	tree := &btree.Tree{}
 	start, end := int64(1), int64(100)
 	exp := make(map[int64]*node)
 	s := make([]*node, end)
@@ -19,28 +29,22 @@ func TestBalanced_Insert(t *testing.T) {
 			Data: testutils.RandomString(20),
 		}
 
-		btree.Insert(c)
+		tree.Insert(c)
 		exp[c.ID] = c
 		s[i-1] = c
 	}
 
-	f := btree.Search(&node{ID: testutils.RandInt64(end+1, end+end)})
+	f := tree.Search(&node{ID: testutils.RandInt64(end+1, end+end)})
 	assert.Equal(t, true, f == nil)
 
 	i := testutils.RandInt64(start-1, end-1)
-	n := btree.Search(&node{ID: s[i].ID}).Value.(*node)
+	n := tree.Search(&node{ID: s[i].ID}).Value.(*node)
 	assert.Equal(t, true, n != nil)
 	assert.Equal(t, exp[n.ID], n)
-
-	// file, _ := os.Create("tree.json")
-	// defer file.Close()
-	// d, _ := json.Marshal(btree.Root)
-	// ioutil.WriteFile("tree.json", d, 0777)
-	// d, _ := json.NewEncoder(file).Encode(btree)
 }
 
 func TestBalanced_Delete(t *testing.T) {
-	btree := &tree.Balanced{}
+	tree := &btree.Tree{}
 	start, end := int64(1), int64(100)
 	exp := make(map[int64]*node)
 	s := make([]*node, end)
@@ -51,36 +55,38 @@ func TestBalanced_Delete(t *testing.T) {
 			Data: testutils.RandomString(20),
 		}
 
-		btree.Insert(c)
+		tree.Insert(c)
 		exp[c.ID] = c
 		s[i-1] = c
 	}
 
 	i := testutils.RandInt64(start-1, end-1)
-	btree.Delete(s[i])
+	tree.Delete(s[i])
 
-	n := btree.Search(&node{ID: s[i].ID})
+	n := tree.Search(&node{ID: s[i].ID})
 	assert.Equal(t, true, n == nil)
 }
 
 func BenchmarkBalanced_Insert(b *testing.B) {
-	btree := &tree.Balanced{}
+	tree := &btree.Tree{}
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
 		b.StopTimer()
+
 		n := &node{
 			ID:   testutils.RandInt64(0, 999999),
 			Data: testutils.RandomString(30),
 		}
+
 		b.StartTimer()
 
-		btree.Insert(n)
+		tree.Insert(n)
 	}
 }
 
 func BenchmarkBalanced_Search(b *testing.B) {
-	btree := &tree.Balanced{}
+	tree := &btree.Tree{}
 	start, end := int64(1), int64(1000)
 	s := make([]*node, end)
 
@@ -90,7 +96,8 @@ func BenchmarkBalanced_Search(b *testing.B) {
 			ID:   v,
 			Data: testutils.RandomString(20),
 		}
-		btree.Insert(c)
+
+		tree.Insert(c)
 		s[i-1] = c
 	}
 
@@ -100,6 +107,6 @@ func BenchmarkBalanced_Search(b *testing.B) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		_ = btree.Search(v)
+		_ = tree.Search(v)
 	}
 }

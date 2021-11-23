@@ -1,11 +1,13 @@
-package tree
+package binary
+
+import "github.com/partyzanex/algolib/tree"
 
 type Node struct {
-	Value       Comparable
+	Value       tree.Comparable
 	Left, Right *Node
 }
 
-func (n *Node) Insert(v Comparable) *Node {
+func (n *Node) Insert(v tree.Comparable) *Node {
 	i := v.Value()
 	j := n.Value.Value()
 
@@ -16,6 +18,7 @@ func (n *Node) Insert(v Comparable) *Node {
 	if i < j {
 		if n.Left == nil {
 			n.Left = &Node{Value: v}
+
 			return n.Left
 		}
 
@@ -24,14 +27,15 @@ func (n *Node) Insert(v Comparable) *Node {
 
 	if n.Right == nil {
 		n.Right = &Node{Value: v}
+
 		return n.Right
 	}
 
 	return n.Right.Insert(v)
 }
 
-func (n *Node) Slice() []Comparable {
-	var slice []Comparable
+func (n *Node) Slice() []tree.Comparable {
+	var slice []tree.Comparable
 
 	if n.Left != nil {
 		slice = append(slice, n.Left.Slice()...)
@@ -51,6 +55,7 @@ type WalkFunc func(n *Node) bool
 func (n *Node) Walk(f WalkFunc) {
 	if n.Left != nil {
 		n.Left.Walk(f)
+
 		return
 	}
 
@@ -60,11 +65,12 @@ func (n *Node) Walk(f WalkFunc) {
 
 	if n.Right != nil {
 		n.Right.Walk(f)
+
 		return
 	}
 }
 
-func (n *Node) Search(v Comparable) *Node {
+func (n *Node) Search(v tree.Comparable) *Node {
 	if n == nil {
 		return nil
 	}

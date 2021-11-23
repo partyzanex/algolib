@@ -1,30 +1,29 @@
-package tree
+package binary
 
-type Comparable interface {
-	Value() int64
+import "github.com/partyzanex/algolib/tree"
+
+type Tree struct {
+	root *Node
 }
 
-type Binary struct {
-	Root *Node
-}
+func (t *Tree) Insert(v tree.Comparable) *Node {
+	if t.root == nil {
+		t.root = &Node{Value: v}
 
-func (t *Binary) Insert(v Comparable) *Node {
-	if t.Root == nil {
-		t.Root = &Node{Value: v}
-		return t.Root
+		return t.root
 	}
 
-	return t.Root.Insert(v)
+	return t.root.Insert(v)
 }
 
-func (t *Binary) Slice() []Comparable {
-	return t.Root.Slice()
+func (t *Tree) Slice() []tree.Comparable {
+	return t.root.Slice()
 }
 
-func (t *Binary) Delete(v Comparable) {
+func (t *Tree) Delete(v tree.Comparable) {
 	var (
 		parent  *Node
-		current = t.Root
+		current = t.root
 		i       = v.Value()
 	)
 
@@ -45,7 +44,8 @@ func (t *Binary) Delete(v Comparable) {
 
 				if right != nil {
 					right.Walk(func(n *Node) bool {
-						t.Root.Insert(n.Value)
+						t.root.Insert(n.Value)
+
 						return true
 					})
 				}
@@ -55,11 +55,13 @@ func (t *Binary) Delete(v Comparable) {
 
 			if current.Right != nil {
 				*current = *current.Right
+
 				return
 			}
 
 			if parent == nil {
-				t.Root = nil
+				t.root = nil
+
 				return
 			}
 
@@ -74,10 +76,10 @@ func (t *Binary) Delete(v Comparable) {
 	}
 }
 
-func (t *Binary) Walk(f WalkFunc) {
-	t.Root.Walk(f)
+func (t *Tree) Walk(f WalkFunc) {
+	t.root.Walk(f)
 }
 
-func (t *Binary) Search(v Comparable) *Node {
-	return t.Root.Search(v)
+func (t *Tree) Search(v tree.Comparable) *Node {
+	return t.root.Search(v)
 }
