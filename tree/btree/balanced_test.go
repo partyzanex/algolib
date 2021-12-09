@@ -69,6 +69,7 @@ func TestBalanced_Delete(t *testing.T) {
 
 func BenchmarkBalanced_Insert(b *testing.B) {
 	tree := &btree.Tree{}
+
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
