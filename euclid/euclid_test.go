@@ -12,6 +12,7 @@ var nums = []struct {
 	{1223345, 185},
 	{5654, 798746541},
 	{56254, 798746},
+	{640, 480},
 }
 
 func TestPlainGCD(t *testing.T) {

@@ -1,6 +1,6 @@
 package euclid
 
-// greatest common divisor
+// PlainGCD implements greatest common divisor
 // slow algorithm
 func PlainGCD(a, b float64) float64 {
 	for {
@@ -18,7 +18,7 @@ func PlainGCD(a, b float64) float64 {
 	return a
 }
 
-// fastest algorithm, but only int numbers
+// ExtendedGCD implements fastest algorithm, but only int numbers
 func ExtendedGCD(a, b int64) int64 {
 	for {
 		if a == 0 || b == 0 {
@@ -26,9 +26,9 @@ func ExtendedGCD(a, b int64) int64 {
 		}
 
 		if a > b {
-			a = a % b
+			a %= b
 		} else {
-			b = b % a
+			b %= a
 		}
 	}
 
