@@ -1,2 +1,5 @@
 .idea
 /vendor
+bin/
+*.out
+*.log
